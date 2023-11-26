@@ -1,0 +1,46 @@
+body {
+    margin: 0;
+    font-family: 'Arial', sans-serif;
+}
+
+header {
+    background-color: blue;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+}
+
+#loginButton, #logoutButton {
+    background-color: orange; /* Example contrast color */
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+}
+
+main {
+    background: linear-gradient(to right, #ff6e7f, #bfe9ff); /* Funky gradient background */
+    overflow-x: auto;
+    white-space: nowrap;
+    padding: 1rem;
+}
+
+#assetsContainer > div {
+    display: inline-block;
+    margin: 0.5rem;
+    text-align: center;
+}
+
+footer {
+    background-color: black;
+    color: white;
+    text-align: center;
+    padding: 1rem;
+}
+
+.modal {
+    display: none;
+    /* Modal styling goes here */
+}

@@ -1,14 +1,35 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta charset='utf-8'>
-    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
-    <title>Page Title</title>
-    <meta name='viewport' content='width=device-width, initial-scale=1'>
-    <link rel='stylesheet' type='text/css' media='screen' href='main.css'>
-    <script src='main.js'></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AssetBook</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    this is a test page version two to check if auto updates take place on site
+    <header>
+        <h1>AssetBook</h1>
+        <div id="userArea">
+            <span id="userName">Guest User</span>
+            <button id="loginButton">Login</button>
+        </div>
+    </header>
+
+    <main>
+        <div id="assetsContainer">
+            <!-- Assets will be loaded here -->
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2023 AssetBook</p>
+    </footer>
+
+    <div id="assetModal" class="modal">
+        <!-- Asset details will be loaded here -->
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="main.js"></script>
 </body>
 </html>
