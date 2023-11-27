@@ -15,18 +15,21 @@
         </div>
     </header>
 
-    <main>
-        <div id="assetsContainer">
-            <!-- Assets will be loaded here -->
-        </div>
+    <!-- Assets will be loaded here -->
+    <main id="assetsContainer">
     </main>
 
     <footer>
         <p>&copy; 2023 AssetBook</p>
     </footer>
 
-    <div id="assetModal" class="modal">
-        <!-- Asset details will be loaded here -->
+    <!-- The modal backdrop -->
+    <div class="modal-backdrop">
+        <!-- The actual modal -->
+        <div id="assetModal" class="modal">
+            <button class="modal-close">&times;</button>
+            <!-- Modal content goes here -->
+        </div>
     </div>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>

@@ -13,7 +13,7 @@ header {
 }
 
 #loginButton, #logoutButton {
-    background-color: orange; /* Example contrast color */
+    background-color: green;
     color: white;
     border: none;
     padding: 0.5rem 1rem;
@@ -21,16 +21,34 @@ header {
 }
 
 main {
-    background: linear-gradient(to right, #ff6e7f, #bfe9ff); /* Funky gradient background */
-    overflow-x: auto;
-    white-space: nowrap;
-    padding: 1rem;
+    background: linear-gradient(to right, #ff6e7f, #bfe9ff);
+    overflow-x: hidden;
+    display: block;
 }
 
 #assetsContainer > div {
     display: inline-block;
-    margin: 0.5rem;
+    width: calc(33.333% - 2rem);
+    height: 300px;
+    margin: 1rem;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.5);
     text-align: center;
+    padding-bottom: 1%;
+}
+
+#assetsContainer > div > img {
+    max-width: 90%;
+    height: 80%;
+    display: block;
+    margin-left: 5%;
+    margin-top: 5%;
+    margin-bottom: -1%;
+}
+
+#assetsContainer > div > p {
+    font-family: 'Segoe UI';
+    font-size: 1.2rem;
+    font-weight:500;
 }
 
 footer {
@@ -40,7 +58,67 @@ footer {
     padding: 1rem;
 }
 
+/* Styles for the backdrop */
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.5); /* Faded background */
+    backdrop-filter: blur(5px); /* Blur effect for supported browsers */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10; /* Higher than the content */
+    display: none; /* Hidden by default */
+}
+
+/* Styles for the modal */
 .modal {
-    display: none;
-    /* Modal styling goes here */
+    width: 60vw;
+    height: 80vh;
+    background: white;
+    padding: 20px;
+    box-sizing: border-box;
+    overflow-x: hidden; /* In case the content overflows */
+    position: relative;
+    z-index: 20; /* Above the backdrop */
+}
+
+.modal > div {
+    margin-left: 5%;
+    width: 90%;
+}
+
+.modal > div > img{
+    width: 100%;
+    height: auto;
+}
+
+.modal > div > h4{
+    margin-top: -2%;
+    font-style: italic;
+}
+
+.modal > div > p{
+    margin-top: -3%;
+    font-family: 'Segoe UI';
+}
+/* Styles for the close button */
+.modal-close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-size: 20px;
+    background: none;
+    border: none;
+}
+
+/* Show/hide classes for the modal and backdrop */
+.modal-backdrop.show,
+.modal.show {
+    display: flex;
 }
