@@ -58,7 +58,7 @@ footer {
 }
 
 /* Styles for the backdrop */
-.modal-backdrop {
+.asset-modal-backdrop, .login-modal-backdrop {
     position: fixed;
     top: 0;
     left: 0;
@@ -75,14 +75,22 @@ footer {
 
 /* Styles for the modal */
 .modal {
-    width: 60vw;
-    height: 80vh;
     background: white;
     padding: 20px;
     box-sizing: border-box;
     overflow-x: hidden; /* In case the content overflows */
     position: relative;
     z-index: 20; /* Above the backdrop */
+}
+
+.loginModal{
+    width: 40vw;
+    height: 50vh;
+}
+
+.assetModal{
+    width: 60vw;
+    height: 80vh;
 }
 
 .modal > div {
@@ -117,7 +125,52 @@ footer {
 }
 
 /* Show/hide classes for the modal and backdrop */
-.modal-backdrop.show,
-.modal.show {
+.asset-modal-backdrop.show,
+.asset-modal.show,
+.login-modal-backdrop.show,
+.login-modal.show
+{
     display: flex;
+}
+
+/* Style the input fields and submit button */
+input[type=email], input[type=password] {
+    width: calc(100% - 10px);
+    padding: 10px;
+    margin-top: 0px;
+    margin-bottom: 0px;
+    display: inline-block;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+}
+  
+  /* Set a style for all buttons */
+button.btn {
+    background-color: #04AA6D;
+    color: white;
+    padding: 14px 20px;
+    margin: 8px 0;
+    border: none;
+    cursor: pointer;
+    width: 98%;
+    font-size: 1.2rem;
+}
+  
+button.btn:hover {
+    opacity: 0.8;
+}
+  
+/* Add padding to container elements */
+.form-group {
+    padding: 6px;
+}
+
+#loginModal > h2{
+    text-align: center;
+    text-decoration: underline;
+}
+
+.register-link{
+    margin-top: 2px;
+    text-align: center;
 }

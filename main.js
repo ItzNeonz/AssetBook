@@ -1,6 +1,17 @@
 var assets = []
+var currUser = undefined
 
 $(document).ready(function() {
+
+    $(document).on('click', '#logoutButton', function() {
+        $(this).replaceWith('<button id="loginButton">Login</button>');
+        $('#userName').text('Guest User');
+        currUser = undefined;
+        $('#loginButton').on('click', function() {
+            showLoginModal();
+          });
+      });
+
 
     // Initialize the fetchAssets function when the document is ready
     fetchAssets();
@@ -8,19 +19,34 @@ $(document).ready(function() {
     // Open asset details in a modal
     $('#assetsContainer').on('click', 'div', function() {
         var assetId = $(this).attr("id");
-        // Load asset details based on assetId and display modal
         var asset = assets.find(obj => obj.id == assetId);
         renderAssetDetail(asset);
     });
 
+    $('#loginButton').on('click', function() {
+        showLoginModal();
+      });
+
     $('.modal-close').on('click', function() {
-        hideModal();
+        hideAssetModal();
+        hideLoginModal();
     });
 
-    $('.modal-backdrop').on('click', function(event) {
-        if ($(event.target).is('.modal-backdrop')) {
-            hideModal();
+    $('.asset-modal-backdrop').on('click', function(event) {
+        if ($(event.target).is('.asset-modal-backdrop')) {
+            hideAssetModal();
         }
+    });
+
+    $('.login-modal-backdrop').on('click', function(event) {
+        if ($(event.target).is('.login-modal-backdrop')) {
+            hideLoginModal();
+        }
+    });
+
+    $('#loginForm').on('submit', function(event) {
+        event.preventDefault();
+        login();
     });
 
 });
@@ -116,15 +142,56 @@ function renderAssetDetail(asset){
     var $date = $('<h4>').text("Uploaded on: " + obj.toLocaleDateString('en-GB', options).replace(/ /g, '-'));
     var $desc = $('<p>').text(asset.Description);
     $assetDiv.append($thumbnail, $title, $date, $desc).appendTo($assetModal);
-    showModal();
+    showAssetModal();
 }
 
-function showModal() {
-    $('.modal-backdrop').addClass('show');
+function login(){
+    var email = $('#email').val();
+    var password = $('#password').val();
+    $.ajax({
+        url: 'https://prod-35.eastus.logic.azure.com/workflows/24f2f6f0e3314b2eab11fdb26a1ed623/triggers/manual/paths/invoke/assetbook/v1/login?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=yeAq4xGNR9gD1N4obVEwCgVefPA42ETRccaQPNECqy0',
+        type: 'POST',
+        contentType: "application/json; charset=utf-8",
+        dataType: 'json',
+        data: JSON.stringify({
+          "Email": email,
+          "Password": password
+        }),
+        success: function(response) {
+          if(response.Success == "True") {
+            hideLoginModal();
+            $('#loginButton').replaceWith('<button id="logoutButton">Logout</button>');
+            $('#userName').text(response.Username);
+            currUser = response;
+          } else {
+            alert('Login failed: ' + response.Error);
+          }
+        },
+        error: function(xhr, status, error) {
+          // If there is an AJAX error
+          alert('An error occurred: ' + error);
+        }
+    });
+}
+
+function showAssetModal() {
+    $('.asset-modal-backdrop').addClass('show');
     $('#assetModal').addClass('show');
 }
 
-function hideModal() {
-    $('.modal-backdrop').removeClass('show');
+function hideAssetModal() {
+    $('.asset-modal-backdrop').removeClass('show');
     $('#assetModal').removeClass('show');
+}
+
+function showLoginModal(){
+    $('.login-modal-backdrop').addClass('show');
+    $('#loginModal').addClass('show');
+    $('#loginModal').fadeIn();
+}
+
+function hideLoginModal(){
+    $('.login-modal-backdrop').removeClass('show');
+    $('#loginModal').fadeOut();
+    $('#loginModal').removeClass('show');
 }
