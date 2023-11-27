@@ -1,6 +1,6 @@
 body {
     margin: 0;
-    font-family: 'Arial', sans-serif;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 header {
@@ -37,7 +37,7 @@ main {
 }
 
 #assetsContainer > div > img {
-    max-width: 90%;
+    width: 90%;
     height: 80%;
     display: block;
     margin-left: 5%;
@@ -46,7 +46,6 @@ main {
 }
 
 #assetsContainer > div > p {
-    font-family: 'Segoe UI';
     font-size: 1.2rem;
     font-weight:500;
 }
