@@ -17,7 +17,6 @@ $(document).ready(function() {
         fetchAssets();
       }
 
-
     // Open asset details in a modal
     $('#assetsContainer').on('click', 'div', function() {
         var assetId = $(this).attr("id");
@@ -26,23 +25,23 @@ $(document).ready(function() {
     });
 
     $('#loginButton').on('click', function() {
-        showLoginModal();
+        showModal('Login');
       });
 
     $('.modal-close').on('click', function() {
-        hideAssetModal();
-        hideLoginModal();
+        hideModal('Asset');
+        hideModal('Login');
     });
 
     $('.asset-modal-backdrop').on('click', function(event) {
         if ($(event.target).is('.asset-modal-backdrop')) {
-            hideAssetModal();
+            hideModal('Asset');
         }
     });
 
     $('.login-modal-backdrop').on('click', function(event) {
         if ($(event.target).is('.login-modal-backdrop')) {
-            hideLoginModal();
+            hideModal('Login');
         }
     });
 
@@ -54,6 +53,34 @@ $(document).ready(function() {
     $('#registrationForm').on('submit', function(event) {
         event.preventDefault();
         registerUser();
+    });
+
+    $('#createAsset').click(function() {
+        showModal('Upload');
+    });
+
+    $('.modal-close').click(function() {
+        hideModal('Upload');
+    });
+
+    $('.cancel').click(function() {
+        hideModal('Upload');
+    });
+
+    $('#file').change(function() {
+        var fileInput = $(this)[0];
+        if (fileInput.files && fileInput.files[0]) {
+            $('#filename').val(fileInput.files[0].name);
+        }
+    });
+
+    $('#assetUploadForm').submit(function(e) {
+        e.preventDefault();
+        var formData = new FormData(this);
+        var currUser = JSON.parse(localStorage.getItem('currUser'));
+        formData.append('Auth-Key', currUser['Auth-Key']);
+        formData.append('Email', currUser.Email);
+        uploadAsset(formData);
     });
 
     setHeader();
@@ -150,7 +177,7 @@ function renderAssetDetail(asset){
     var $date = $('<h4>').text("Uploaded on: " + obj.toLocaleDateString('en-GB', options).replace(/ /g, '-'));
     var $desc = $('<p>').text(asset.Description);
     $assetDiv.append($thumbnail, $title, $date, $desc).appendTo($assetModal);
-    showAssetModal();
+    showModal('Asset');
 }
 
 function login(){
@@ -167,7 +194,7 @@ function login(){
         }),
         success: function(response) {
           if(response.Success == "True") {
-            hideLoginModal();
+            hideModal('Login');
             localStorage.setItem('currUser', JSON.stringify(response));
             setHeader();
           } else {
@@ -226,26 +253,67 @@ function registerUser(){
     });
 }
 
-function showAssetModal() {
-    $('.asset-modal-backdrop').addClass('show');
-    $('#assetModal').addClass('show');
+function uploadAsset(formData){
+
+    $.ajax({
+        url: 'https://prod-68.eastus.logic.azure.com/workflows/e6959e5b8e1247a482b4cc2b16134062/triggers/manual/paths/invoke/assetbook/v1/asset/create?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=ebX3TKgwp2w1cYipnmYuycjI5JNQjYLNlx-3jN7LFO0',
+        type: 'POST',
+        data: formData,
+        contentType: false,
+        processData: false,
+        success: function(response) {
+            location.reload();
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+            console.log('Upload failed: ' + textStatus);
+            alert('Upload failed: ' + errorThrown);
+        }
+    });
 }
 
-function hideAssetModal() {
-    $('.asset-modal-backdrop').removeClass('show');
-    $('#assetModal').removeClass('show');
+function showModal(type){
+    switch(type){
+        case "Asset":
+            $('.asset-modal-backdrop').addClass('show');
+            $('#assetModal').addClass('show');
+            hideModal("Login");
+            hideModal("Upload");
+            break;
+        
+        case "Login":
+            $('.login-modal-backdrop').addClass('show');
+            $('#loginModal').addClass('show');
+            hideModal('Asset');
+            hideModal('Upload');
+            break;
+
+        case "Upload":
+            $('.upload-modal-backdrop').addClass('show');
+            $('#assetUploadModal').addClass('show');
+            hideModal('Asset');
+            hideModal('Login');
+            break;
+        
+    }
 }
 
-function showLoginModal(){
-    $('.login-modal-backdrop').addClass('show');
-    $('#loginModal').addClass('show');
-    $('#loginModal').fadeIn();
-}
+function hideModal(type){
+    switch(type){
+        case "Asset":
+            $('.asset-modal-backdrop').removeClass('show');
+            $('#assetModal').removeClass('show');
+            break;
+        
+        case "Login":
+            $('.login-modal-backdrop').removeClass('show');
+            $('#loginModal').removeClass('show');
+            break;
 
-function hideLoginModal(){
-    $('.login-modal-backdrop').removeClass('show');
-    $('#loginModal').fadeOut();
-    $('#loginModal').removeClass('show');
+        case "Upload":
+            $('.upload-modal-backdrop').removeClass('show');
+            $('#assetUploadModal').removeClass('show');
+            break;
+    }
 }
 
 function setHeader(){
@@ -269,7 +337,7 @@ function setHeader(){
         $("#logoutButton").replaceWith('<button id="loginButton">Login</button>');
         $('#userName').text('Guest User');
         $('#loginButton').on('click', function() {
-            showLoginModal();
+            showModal('Login');
         });
         $('#adminHeader').hide();
         $('#userArea').show();

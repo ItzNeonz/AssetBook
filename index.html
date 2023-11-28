@@ -17,7 +17,7 @@
           <nav>
               <ul>
                   <li><a href="#" id="myAssets">My Assets</a></li>
-                  <li><a href="#" id="createAsset">Upload an Asset</a></li>
+                  <li><a id="createAsset">Upload an Asset</a></li>
               </ul>
               <button id="adminLogoutButton">Logout</button>
           </nav>
@@ -32,7 +32,7 @@
         <p>&copy; 2023 AssetBook</p>
     </footer>
 
-    <!-- The modal backdrop -->
+    <!-- MODAL TO DISPLAY ASSET DETAILS -->
     <div class="asset-modal-backdrop">
         <!-- The actual modal -->
         <div id="assetModal" class="modal assetModal">
@@ -41,7 +41,7 @@
         </div>
     </div>
 
-    <!-- The modal backdrop -->
+    <!-- MODAL TO DISPLAY LOGIN FORM -->
     <div class="login-modal-backdrop">
         <div id="loginModal" class="modal loginModal">
             <span class="modal-close">&times;</span>
@@ -63,6 +63,36 @@
               </div>
             </form>
           </div>
+    </div>
+
+      <!-- MODAL TO DISPLAY LOGIN FORM -->
+    <div class="upload-modal-backdrop">
+      <div id="assetUploadModal" class="modal assetModal">
+        <span class="modal-close">&times;</span>
+        <h2>Upload Asset Form</h2>
+        <form id="assetUploadForm">
+            <div class="form-group">
+                <label for="title">Title:</label>
+                <input type="text" id="title" name="title" required>
+            </div>
+            <div class="form-group">
+                <label for="description">Description:</label>
+                <input type="text" id="description" name="description" required mul>
+            </div>
+            <div class="form-group">
+                <label for="file">File:</label>
+                <input type="file" id="file" name="file" accept="image/*,video/*,audio/*" required>
+            </div>
+            <div class="form-group">
+                <label for="filename">Filename:</label>
+                <input type="text" id="filename" name="filename" readonly>
+            </div>
+            <div class="form-group">
+                <button type="submit" class="btn">Upload</button>
+                <button type="button" class="cancel-btn">Cancel</button>
+            </div>
+        </form>
+      </div>
     </div>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
