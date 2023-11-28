@@ -12,14 +12,14 @@ $(document).ready(function() {
         window.location.href = 'index.html';
     });
 
-      if(!window.location.pathname.includes('register.html'))
-      {
+    if(!window.location.pathname.includes('register.html'))
+    {
         fetchAssets();
-      }
+    }
 
     // Open asset details in a modal
-    $('#assetsContainer').on('click', 'div', function() {
-        var assetId = $(this).attr("id");
+    $('#assetsContainer').on('click', 'img', function() {
+        var assetId = $(this).parent().attr("id");
         var asset = assets.find(obj => obj.id == assetId);
         renderAssetDetail(asset);
     });
@@ -83,6 +83,14 @@ $(document).ready(function() {
         uploadAsset(formData);
     });
 
+    $('#assetsContainer').on('click', '.delete-asset', function() {
+        if(confirm("Are you sure you want to delete this asset?"))
+        {
+            var id = $(this).parent().parent().attr('id');
+            deleteAsset(id);
+        }
+    });
+
     setHeader();
 });
 
@@ -109,14 +117,21 @@ function renderAssets(assets) {
     $assetsContainer.empty(); // Clear existing assets if any
 
     $.each(assets, function(i, asset) {
-        var $assetDiv = $('<div>').attr({'id': asset.id});
+        var $assetDiv = $('<div>').attr({'id': asset.id, 'class': 'asset'});
         var $thumbnail = $('<img>').attr({
             'src': asset.FilePath,
             'alt': asset.Title
         });
         var $title = $('<p>').text(asset.Title);
+        if(isAdmin()){
+            var $iconsDiv = $('<div>').attr({'class': 'icons'});
+            $iconsDiv.append('<button class="edit-asset"><i class="fas fa-edit"></i></button>');
+            $iconsDiv.append('<button class="delete-asset"><i class="fas fa-trash-alt"></i></button>');
+            $assetDiv.append($iconsDiv);
+        }
+        $assetDiv.append($thumbnail, $title);
 
-        $assetDiv.append($thumbnail, $title).appendTo($assetsContainer);
+        $assetDiv.appendTo($assetsContainer);
     });
 }
 
@@ -317,6 +332,7 @@ function hideModal(type){
 }
 
 function setHeader(){
+    
     if(localStorage.getItem('currUser')){
         var currUser = JSON.parse(localStorage.getItem('currUser'));
         if(currUser.Type == "Admin")
@@ -344,4 +360,44 @@ function setHeader(){
     }
 }
 
-        
+function isAdmin(){
+    if(localStorage.getItem('currUser'))
+    {
+        var user = JSON.parse(localStorage.getItem('currUser'));
+        return user.Type == "Admin";
+    }
+    
+    return false;
+}
+
+function deleteAsset(id){
+
+    var asset = assets.find(obj => obj.id === id);
+    var filepath = asset.FilePath.substring(asset.FilePath.indexOf(".net") + 4);
+    var currUser = JSON.parse(localStorage.getItem('currUser'));
+    console.log(filepath);
+
+    $.ajax({
+        url: 'https://prod-34.eastus.logic.azure.com/workflows/676c59636fe244dd976735199abd4cb7/triggers/manual/paths/invoke/assetbook/v1/asset/delete?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=kDomhfSvBSk7zrxeMIqbGuUruCFtKNZx82p6qSDoFXw',
+        type: 'POST',
+        contentType: "application/json; charset=utf-8",
+        dataType: 'json',
+        data: JSON.stringify({
+          "Email": currUser.Email,
+          "AssetID": id,
+          "Auth-Key": currUser['Auth-Key'],
+          "FilePath": filepath
+        }),
+        success: function(response) {
+          if(response.Success == "OK") {
+            window.location.href = 'index.html';
+          } else {
+            alert('Delete failed: ' + response.Error);
+          }
+        },
+        error: function(xhr, status, error) {
+          // If there is an AJAX error
+          alert('An error occurred: ' + error);
+        }
+    });
+}
