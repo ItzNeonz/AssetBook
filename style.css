@@ -134,7 +134,7 @@ footer {
 }
 
 /* Style the input fields and submit button */
-input[type=email], input[type=password] {
+input[type=email], input[type=password], input[type=text] {
     width: calc(100% - 10px);
     padding: 10px;
     margin-top: 0px;

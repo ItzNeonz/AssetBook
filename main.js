@@ -1,20 +1,27 @@
 var assets = []
-var currUser = undefined
 
 $(document).ready(function() {
+
+    if(localStorage.getItem('currUser')){
+        var currUser = JSON.parse(localStorage.getItem('currUser'));
+        $('#userName').text(currUser.Username);
+        $('#loginButton').replaceWith('<button id="logoutButton">Logout</button>');
+    }
 
     $(document).on('click', '#logoutButton', function() {
         $(this).replaceWith('<button id="loginButton">Login</button>');
         $('#userName').text('Guest User');
-        currUser = undefined;
+        localStorage.clear();
         $('#loginButton').on('click', function() {
             showLoginModal();
           });
       });
 
+      if(!window.location.pathname.includes('register.html'))
+      {
+        fetchAssets();
+      }
 
-    // Initialize the fetchAssets function when the document is ready
-    fetchAssets();
 
     // Open asset details in a modal
     $('#assetsContainer').on('click', 'div', function() {
@@ -47,6 +54,11 @@ $(document).ready(function() {
     $('#loginForm').on('submit', function(event) {
         event.preventDefault();
         login();
+    });
+
+    $('#registrationForm').on('submit', function(event) {
+        event.preventDefault();
+        registerUser();
     });
 
 });
@@ -162,7 +174,7 @@ function login(){
             hideLoginModal();
             $('#loginButton').replaceWith('<button id="logoutButton">Logout</button>');
             $('#userName').text(response.Username);
-            currUser = response;
+            localStorage.setItem('currUser', JSON.stringify(response));
           } else {
             alert('Login failed: ' + response.Error);
           }
@@ -170,6 +182,51 @@ function login(){
         error: function(xhr, status, error) {
           // If there is an AJAX error
           alert('An error occurred: ' + error);
+        }
+    });
+}
+
+function registerUser(){
+    var firstName = $('#firstName').val().trim();
+    var lastName = $('#lastName').val().trim();
+    var email = $('#email').val().trim();
+    var password = $('#password').val();
+    var retypePassword = $('#retypePassword').val();
+
+    if (!firstName || !lastName || !email || !password || !retypePassword) {
+        alert('All fields are required.');
+        return false;
+    }
+
+    if (password !== retypePassword) {
+        alert('Passwords do not match.');
+        return false;
+    }
+
+    var userData = {
+        "FirstName": firstName,
+        "LastName": lastName,
+        "Email": email,
+        "Password": password
+    };
+
+    $.ajax({
+        url: 'https://prod-13.eastus.logic.azure.com:443/workflows/7f0fc08851614452b243aa64e72c0fd8/triggers/manual/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=4hUtJo1K1l0TszRPvXDcmWXWA35AwtNi1fF8Of82RTE',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(userData),
+        success: function(response) {
+            if(response.Success == "True") {
+                localStorage.setItem('currUser', JSON.stringify(response));
+                window.location.href = 'index.html';
+            } else {
+                alert('Registration failed: ' + response.Error);
+            }
+            
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+            console.error('Registration failed:', textStatus, errorThrown);
+            alert('Registration failed: ' + errorThrown);
         }
     });
 }
