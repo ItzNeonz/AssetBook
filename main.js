@@ -2,20 +2,15 @@ var assets = []
 
 $(document).ready(function() {
 
-    if(localStorage.getItem('currUser')){
-        var currUser = JSON.parse(localStorage.getItem('currUser'));
-        $('#userName').text(currUser.Username);
-        $('#loginButton').replaceWith('<button id="logoutButton">Logout</button>');
-    }
-
     $(document).on('click', '#logoutButton', function() {
-        $(this).replaceWith('<button id="loginButton">Login</button>');
-        $('#userName').text('Guest User');
         localStorage.clear();
-        $('#loginButton').on('click', function() {
-            showLoginModal();
-          });
+        setHeader();
       });
+
+    $('#adminLogoutButton').click(function() {
+        localStorage.clear();
+        window.location.href = 'index.html';
+    });
 
       if(!window.location.pathname.includes('register.html'))
       {
@@ -61,6 +56,7 @@ $(document).ready(function() {
         registerUser();
     });
 
+    setHeader();
 });
 
 // Function to fetch assets from the server
@@ -172,9 +168,8 @@ function login(){
         success: function(response) {
           if(response.Success == "True") {
             hideLoginModal();
-            $('#loginButton').replaceWith('<button id="logoutButton">Logout</button>');
-            $('#userName').text(response.Username);
             localStorage.setItem('currUser', JSON.stringify(response));
+            setHeader();
           } else {
             alert('Login failed: ' + response.Error);
           }
@@ -252,3 +247,33 @@ function hideLoginModal(){
     $('#loginModal').fadeOut();
     $('#loginModal').removeClass('show');
 }
+
+function setHeader(){
+    if(localStorage.getItem('currUser')){
+        var currUser = JSON.parse(localStorage.getItem('currUser'));
+        if(currUser.Type == "Admin")
+        {
+            $('#userArea').hide();
+            $('#adminHeader').show();
+        }
+        else if(currUser.Type == "User")
+        {
+            $('#userName').text(currUser.Username);
+            $('#loginButton').replaceWith('<button id="logoutButton">Logout</button>');
+            $('#userArea').show();
+            $('#adminHeader').hide();
+        }
+    }
+    else
+    {
+        $("#logoutButton").replaceWith('<button id="loginButton">Login</button>');
+        $('#userName').text('Guest User');
+        $('#loginButton').on('click', function() {
+            showLoginModal();
+        });
+        $('#adminHeader').hide();
+        $('#userArea').show();
+    }
+}
+
+        
