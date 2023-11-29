@@ -24,6 +24,18 @@ $(document).ready(function() {
         renderAssetDetail(asset);
     });
 
+    $('#assetsContainer').on('click', 'video', function() {
+        var assetId = $(this).parent().attr("id");
+        var asset = assets.find(obj => obj.id == assetId);
+        renderAssetDetail(asset);
+    });
+
+    $('#assetsContainer').on('click', 'audio', function() {
+        var assetId = $(this).parent().attr("id");
+        var asset = assets.find(obj => obj.id == assetId);
+        renderAssetDetail(asset);
+    });
+
     $('#loginButton').on('click', function() {
         showModal('Login');
       });
@@ -53,15 +65,18 @@ $(document).ready(function() {
         }
     });
 
+    $('#assetUploadForm').on('click', '.cancel-btn', function() {
+        hideModal('Upload');
+    });
+
+    $('#editAssetForm').on('click', '.cancel-btn', function() {
+        hideModal('Edit');
+    });  
+
     $('.edit-modal-backdrop').on('click', function(event) {
         if ($(event.target).is('.edit-modal-backdrop')) {
             hideModal('Edit');
         }
-    });
-
-    $('.cancel').click(function() {
-        hideModal('Upload');
-        hideModal('Edit');
     });
 
     $('#loginForm').on('submit', function(event) {
@@ -84,7 +99,27 @@ $(document).ready(function() {
         if (fileInput.files && fileInput.files[0]) {
             $('#filename').val(fileInput.files[0].name);
         }
+        fetchAuthKeys();
     });
+
+    $('#assetUploadForm').on('click', '.magic-btn', function() {
+        if(! $('#file').val())
+        {
+            alert('Please select a file first!');
+        }
+        else
+        {
+            var filename = document.getElementById('file').value;
+            if(getFileType(filename) == "image")
+            {
+                magicFill();
+            }
+            else{
+                alert("This feature is only available for pictures!");
+            }
+        }
+        
+    });  
 
     $('#assetUploadForm').submit(function(e) {
         e.preventDefault();
@@ -156,10 +191,35 @@ function renderAssets(assets) {
 
     $.each(assets, function(i, asset) {
         var $assetDiv = $('<div>').attr({'id': asset.id, 'class': 'asset'});
-        var $thumbnail = $('<img>').attr({
-            'src': asset.FilePath,
-            'alt': asset.Title
-        });
+        var $thumbnail;
+
+        switch (getFileType(asset.FileName)){
+            case "image":
+                $thumbnail = $('<img>').attr({
+                    'src': asset.FilePath,
+                    'alt': asset.Title
+                });
+                break;
+            case "audio":
+                $thumbnail = $('<audio />').attr({
+                    'controls': true
+                });
+    
+                var src = $('<source />', { src: asset.FilePath, type: 'audio/mpeg' });
+                var sourceOgg = $('<source />', { src: asset.FilePath, type: 'audio/ogg' });
+                $thumbnail.append(src, sourceOgg);
+                break;
+            case "video":
+                $thumbnail = $('<video />').attr({
+                    'controls': true,
+                });
+    
+                var $sourceMp4 = $('<source />', { src: asset.FilePath, type: 'video/mp4' });
+                var $sourceOgg = $('<source />', { src: asset.FilePath, type: 'video/ogg' });
+                $thumbnail.append($sourceMp4, $sourceOgg);
+                break;
+        }
+
         var $title = $('<p>').text(asset.Title);
         if(isAdmin()){
             var $iconsDiv = $('<div>').attr({'class': 'icons'});
@@ -470,4 +530,64 @@ function updateAsset(formData, assetID){
             alert('Update failed: ' + errorThrown);
         }
     });
+}
+
+// Function to fetch assets from the server
+function fetchAuthKeys() {
+    $.ajax({
+        url: 'https://prod-06.eastus.logic.azure.com/workflows/3ef2d033932b461d9abbc84550e9f0fc/triggers/manual/paths/invoke/admin/imagedetector/key?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=62bgMwd8uT_KiCwakpjH9bam5Kus9s754e8fNSx40ME',
+        type: 'GET',
+        dataType: 'json', // Expecting JSON response
+        success: function(data) {
+            localStorage.setItem("AuthKey", data.Key);
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+            console.error('Error fetching keys:', textStatus, errorThrown);
+            // Handle error
+        }
+    });
+}
+
+function magicFill(){
+    var file = fileInput = document.getElementById('file').files[0];
+    var authToken = localStorage.getItem('AuthKey');
+
+    if (file) {
+        var reader = new FileReader();
+
+        reader.onload = function(event) {
+            $.ajax({
+                url: 'https://coursework2imagedetector.cognitiveservices.azure.com/computervision/imageanalysis:analyze?api-version=2023-02-01-preview&features=caption,tags&language=en',
+                type: 'POST',
+                contentType: 'application/octet-stream',
+                processData: false,
+                data: event.target.result,
+                beforeSend: function(xhr) {
+                    xhr.setRequestHeader("Ocp-Apim-Subscription-Key", authToken);
+                },
+                success: function(response) {
+                    var obj = response;
+                    $('#title').val(obj.tagsResult.values[0].name);
+                    $('#description').val(obj.captionResult.text);
+                    for(var cnt=0; cnt<obj.tagsResult.values.length; cnt++){
+                        var val = $('#description').val();
+                        $('#description').val(val + "\n#" + obj.tagsResult.values[cnt].name);
+                    }
+                    localStorage.removeItem('AuthKey');
+                },
+                error: function(xhr, status, error) {
+                    console.error('File to analyse file', error);
+                }
+            });
+        };
+
+        reader.onerror = function(error) {
+            console.log('Error reading file:', error);
+        };
+
+        reader.readAsArrayBuffer(file);
+    } else {
+        alert('Please select a file for magic fill!');
+    }
+
 }

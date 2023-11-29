@@ -46,6 +46,23 @@ main {
     margin-bottom: -1%;
 }
 
+video {
+    width: 100%;
+    height: 80%;
+    display: block;
+    margin-top: 5%;
+    margin-bottom: -1%;
+}
+
+audio {
+    width: 100%;
+    height: 80%;
+    display: block;
+    margin-top: 5%;
+    margin-bottom: -1%;
+    min-height: 50px;
+}
+
 #assetsContainer > div > p {
     font-size: 1.2rem;
     font-weight:500;
@@ -144,7 +161,7 @@ footer {
 }
 
 /* Style the input fields and submit button */
-input[type=email], input[type=password], input[type=text] {
+input[type=email], input[type=password], input[type=text], textarea {
     width: calc(100% - 10px);
     padding: 10px;
     margin-top: 0px;
@@ -168,6 +185,17 @@ button.btn {
 
 button.cancel-btn {
     background-color: rgb(221, 16, 30);
+    color: white;
+    padding: 14px 20px;
+    margin: 8px 0;
+    border: none;
+    cursor: pointer;
+    width: 98%;
+    font-size: 1.2rem;
+}
+
+button.magic-btn {
+    background-color: blue;
     color: white;
     padding: 14px 20px;
     margin: 8px 0;
