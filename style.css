@@ -59,7 +59,7 @@ footer {
 }
 
 /* Styles for the backdrop */
-.asset-modal-backdrop, .login-modal-backdrop, .upload-modal-backdrop {
+.asset-modal-backdrop, .login-modal-backdrop, .upload-modal-backdrop, .edit-modal-backdrop {
     position: fixed;
     top: 0;
     left: 0;
@@ -92,6 +92,11 @@ footer {
 .assetModal{
     width: 60vw;
     height: 80vh;
+}
+
+.editModal{
+    width: 60vw;
+    height: 60vh;
 }
 
 .modal > div {
@@ -131,7 +136,9 @@ footer {
 .login-modal-backdrop.show,
 .login-modal.show,
 .upload-modal-backdrop.show,
-.upload-modal.show
+.upload-modal.show,
+.edit-modal-backdrop.show,
+.edit-modal.show
 {
     display: flex;
 }
@@ -180,7 +187,7 @@ button.btn:hover {
     padding: 6px;
 }
 
-#loginModal > h2, #assetUploadModal > h2{
+#loginModal > h2, #assetUploadModal > h2, #editAssetModal > h2{
     text-align: center;
     text-decoration: underline;
 }

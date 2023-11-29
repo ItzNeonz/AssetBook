@@ -31,6 +31,8 @@ $(document).ready(function() {
     $('.modal-close').on('click', function() {
         hideModal('Asset');
         hideModal('Login');
+        hideModal('Upload');
+        hideModal('Edit');
     });
 
     $('.asset-modal-backdrop').on('click', function(event) {
@@ -43,6 +45,23 @@ $(document).ready(function() {
         if ($(event.target).is('.login-modal-backdrop')) {
             hideModal('Login');
         }
+    });
+
+    $('.upload-modal-backdrop').on('click', function(event) {
+        if ($(event.target).is('.upload-modal-backdrop')) {
+            hideModal('Upload');
+        }
+    });
+
+    $('.edit-modal-backdrop').on('click', function(event) {
+        if ($(event.target).is('.edit-modal-backdrop')) {
+            hideModal('Edit');
+        }
+    });
+
+    $('.cancel').click(function() {
+        hideModal('Upload');
+        hideModal('Edit');
     });
 
     $('#loginForm').on('submit', function(event) {
@@ -59,13 +78,6 @@ $(document).ready(function() {
         showModal('Upload');
     });
 
-    $('.modal-close').click(function() {
-        hideModal('Upload');
-    });
-
-    $('.cancel').click(function() {
-        hideModal('Upload');
-    });
 
     $('#file').change(function() {
         var fileInput = $(this)[0];
@@ -89,6 +101,32 @@ $(document).ready(function() {
             var id = $(this).parent().parent().attr('id');
             deleteAsset(id);
         }
+    });
+
+    $('#assetsContainer').on('click', '.edit-asset', function() {
+        var obj = $(this).parent().parent();
+        var asset = assets.find(x => x.id === obj.attr('id'));
+        $('#editTitle').val(asset.Title);
+        $('#editDescription').val(asset.Description);
+        localStorage.setItem('currAsset', JSON.stringify(asset));
+        showModal("Edit");
+    });
+
+    $('#editAssetForm').submit(function(e) {
+        e.preventDefault();
+        var formData = {};
+        var currUser = JSON.parse(localStorage.getItem('currUser'));
+        formData['Title'] = $('#editTitle').val();
+        formData['Description'] = $('#editDescription').val();
+        formData['Auth-Key'] = currUser['Auth-Key'];
+        formData['Email'] = currUser.Email;
+
+        var asset = JSON.parse(localStorage.getItem('currAsset'));
+        formData['Date'] = asset.Date;
+        formData['FileLocator'] = asset.FileLocator;
+        formData['FileName'] = asset.FileName;
+        formData['FilePath'] = asset.FilePath;
+        updateAsset(formData, asset.id);
     });
 
     setHeader();
@@ -308,6 +346,14 @@ function showModal(type){
             hideModal('Asset');
             hideModal('Login');
             break;
+
+        case "Edit":
+            $('.edit-modal-backdrop').addClass('show');
+            $('#editAssetModal').addClass('show');
+            hideModal('Asset');
+            hideModal('Login');
+            hideModal('Upload');
+            break;
         
     }
 }
@@ -327,6 +373,11 @@ function hideModal(type){
         case "Upload":
             $('.upload-modal-backdrop').removeClass('show');
             $('#assetUploadModal').removeClass('show');
+            break;
+
+        case "Edit":
+            $('.edit-modal-backdrop').removeClass('show');
+            $('#editAssetModal').removeClass('show');
             break;
     }
 }
@@ -398,6 +449,25 @@ function deleteAsset(id){
         error: function(xhr, status, error) {
           // If there is an AJAX error
           alert('An error occurred: ' + error);
+        }
+    });
+}
+
+function updateAsset(formData, assetID){
+    console.log(formData);
+    $.ajax({
+        url: 'https://prod-33.eastus.logic.azure.com/workflows/caf5b2a1c34b4ae0b57d9316b734711b/triggers/manual/paths/invoke/assetbook/v1/asset/' + assetID + '?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=m_Doxj5BzPHT2Lvvi4gx6Ib7auDLiJiZCU9SmDuJvKY',
+        type: 'PUT',
+        data: JSON.stringify(formData),
+        contentType: "application/json; charset=utf-8",
+        dataType: 'json',
+        success: function(response) {
+            localStorage.removeItem('currAsset');
+            location.reload();
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+            console.log('Update failed: ' + textStatus);
+            alert('Update failed: ' + errorThrown);
         }
     });
 }
