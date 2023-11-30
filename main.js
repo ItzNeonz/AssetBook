@@ -24,18 +24,6 @@ $(document).ready(function() {
         renderAssetDetail(asset);
     });
 
-    $('#assetsContainer').on('click', 'video', function() {
-        var assetId = $(this).parent().attr("id");
-        var asset = assets.find(obj => obj.id == assetId);
-        renderAssetDetail(asset);
-    });
-
-    $('#assetsContainer').on('click', 'audio', function() {
-        var assetId = $(this).parent().attr("id");
-        var asset = assets.find(obj => obj.id == assetId);
-        renderAssetDetail(asset);
-    });
-
     $('#loginButton').on('click', function() {
         showModal('Login');
       });
@@ -109,14 +97,7 @@ $(document).ready(function() {
         }
         else
         {
-            var filename = document.getElementById('file').value;
-            if(getFileType(filename) == "image")
-            {
-                magicFill();
-            }
-            else{
-                alert("This feature is only available for pictures!");
-            }
+            magicFill();
         }
         
     });  
@@ -127,7 +108,15 @@ $(document).ready(function() {
         var currUser = JSON.parse(localStorage.getItem('currUser'));
         formData.append('Auth-Key', currUser['Auth-Key']);
         formData.append('Email', currUser.Email);
-        uploadAsset(formData);
+        if(getFileType($('#file').val()) == "image")
+        {
+            uploadAsset(formData);
+        }
+        else
+        {
+            alert("Only images are allowed");
+        }
+        
     });
 
     $('#assetsContainer').on('click', '.delete-asset', function() {
@@ -167,6 +156,24 @@ $(document).ready(function() {
     setHeader();
 });
 
+function getFileType(fileName) {
+    // Define regex for different file types
+    const imageRegex = /\.(jpg|jpeg|png|gif|bmp|svg)$/i;
+    const videoRegex = /\.(mp4|mov|wmv|avi|flv|mkv)$/i;
+    const audioRegex = /\.(mp3|wav|wma|aac|flac)$/i;
+
+    // Check the file type based on the extension
+    if (imageRegex.test(fileName)) {
+        return 'image';
+    } else if (videoRegex.test(fileName)) {
+        return 'video';
+    } else if (audioRegex.test(fileName)) {
+        return 'audio';
+    } else {
+        return 'unknown'; // If file type is not recognized
+    }
+}
+
 // Function to fetch assets from the server
 function fetchAssets() {
     $.ajax({
@@ -192,33 +199,10 @@ function renderAssets(assets) {
     $.each(assets, function(i, asset) {
         var $assetDiv = $('<div>').attr({'id': asset.id, 'class': 'asset'});
         var $thumbnail;
-
-        switch (getFileType(asset.FileName)){
-            case "image":
-                $thumbnail = $('<img>').attr({
-                    'src': asset.FilePath,
-                    'alt': asset.Title
-                });
-                break;
-            case "audio":
-                $thumbnail = $('<audio />').attr({
-                    'controls': true
-                });
-    
-                var src = $('<source />', { src: asset.FilePath, type: 'audio/mpeg' });
-                var sourceOgg = $('<source />', { src: asset.FilePath, type: 'audio/ogg' });
-                $thumbnail.append(src, sourceOgg);
-                break;
-            case "video":
-                $thumbnail = $('<video />').attr({
-                    'controls': true,
-                });
-    
-                var $sourceMp4 = $('<source />', { src: asset.FilePath, type: 'video/mp4' });
-                var $sourceOgg = $('<source />', { src: asset.FilePath, type: 'video/ogg' });
-                $thumbnail.append($sourceMp4, $sourceOgg);
-                break;
-        }
+        $thumbnail = $('<img>').attr({
+            'src': asset.FilePath,
+            'alt': asset.Title
+        });
 
         var $title = $('<p>').text(asset.Title);
         if(isAdmin()){
@@ -233,56 +217,15 @@ function renderAssets(assets) {
     });
 }
 
-function getFileType(fileName) {
-    // Define regex for different file types
-    const imageRegex = /\.(jpg|jpeg|png|gif|bmp|svg)$/i;
-    const videoRegex = /\.(mp4|mov|wmv|avi|flv|mkv)$/i;
-    const audioRegex = /\.(mp3|wav|wma|aac|flac)$/i;
-
-    // Check the file type based on the extension
-    if (imageRegex.test(fileName)) {
-        return 'image';
-    } else if (videoRegex.test(fileName)) {
-        return 'video';
-    } else if (audioRegex.test(fileName)) {
-        return 'audio';
-    } else {
-        return 'unknown'; // If file type is not recognized
-    }
-}
-
 function renderAssetDetail(asset){
     var $assetModal = $('#assetModal');
     $assetModal.empty();
     var $assetDiv = $('<div>');
     var $thumbnail;
-
-    switch (getFileType(asset.FileName)){
-        case "image":
-            $thumbnail = $('<img>').attr({
-                'src': asset.FilePath,
-                'alt': asset.Title
-            });
-            break;
-        case "audio":
-            $thumbnail = $('<audio />').attr({
-                'controls': true
-            });
-
-            var src = $('<source />', { src: asset.FilePath, type: 'audio/mpeg' });
-            var sourceOgg = $('<source />', { src: asset.FilePath, type: 'audio/ogg' });
-            $thumbnail.append(src, sourceOgg);
-            break;
-        case "video":
-            $thumbnail = $('<video />').attr({
-                'controls': true,
-            });
-
-            var $sourceMp4 = $('<source />', { src: asset.FilePath, type: 'video/mp4' });
-            var $sourceOgg = $('<source />', { src: asset.FilePath, type: 'video/ogg' });
-            $thumbnail.append($sourceMp4, $sourceOgg);
-            break;
-    }
+    $thumbnail = $('<img>').attr({
+        'src': asset.FilePath,
+        'alt': asset.Title
+    });
 
     var $title = $('<h2>').text(asset.Title);
     var obj = new Date(asset.Date);
@@ -537,13 +480,12 @@ function fetchAuthKeys() {
     $.ajax({
         url: 'https://prod-06.eastus.logic.azure.com/workflows/3ef2d033932b461d9abbc84550e9f0fc/triggers/manual/paths/invoke/admin/imagedetector/key?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=62bgMwd8uT_KiCwakpjH9bam5Kus9s754e8fNSx40ME',
         type: 'GET',
-        dataType: 'json', // Expecting JSON response
+        dataType: 'json',
         success: function(data) {
             localStorage.setItem("AuthKey", data.Key);
         },
         error: function(jqXHR, textStatus, errorThrown) {
             console.error('Error fetching keys:', textStatus, errorThrown);
-            // Handle error
         }
     });
 }
