@@ -58,6 +58,16 @@ footer {
     padding: 1rem;
 }
 
+.footer{
+    display: inline-block;
+    width: 50%;
+    text-align: right;
+}
+
+.language-selector{
+    margin-left: -10%;
+}
+
 /* Styles for the backdrop */
 .asset-modal-backdrop, .login-modal-backdrop, .upload-modal-backdrop, .edit-modal-backdrop {
     position: fixed;

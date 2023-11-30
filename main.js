@@ -1,11 +1,20 @@
-var assets = []
+var assets = [];
+var language = "en";
 
 $(document).ready(function() {
+
+    language = localStorage.getItem('language');
+    if(!language)
+    {
+        language = 'en';
+        localStorage.setItem('language', 'en');
+    }
+    $('#languageDropdown').val(language);
 
     $(document).on('click', '#logoutButton', function() {
         localStorage.clear();
         setHeader();
-      });
+    });
 
     $('#adminLogoutButton').click(function() {
         localStorage.clear();
@@ -21,7 +30,7 @@ $(document).ready(function() {
     $('#assetsContainer').on('click', 'img', function() {
         var assetId = $(this).parent().attr("id");
         var asset = assets.find(obj => obj.id == assetId);
-        renderAssetDetail(asset);
+        renderAssetDetail(asset, language);
     });
 
     $('#loginButton').on('click', function() {
@@ -102,14 +111,17 @@ $(document).ready(function() {
         
     });  
 
-    $('#assetUploadForm').submit(function(e) {
+    $('#assetUploadForm').submit(async function(e) {
         e.preventDefault();
         var formData = new FormData(this);
         var currUser = JSON.parse(localStorage.getItem('currUser'));
         formData.append('Auth-Key', currUser['Auth-Key']);
         formData.append('Email', currUser.Email);
+
         if(getFileType($('#file').val()) == "image")
         {
+            await translate(formData.get("title"), "title");
+            await translate(formData.get("description"), "description");
             uploadAsset(formData);
         }
         else
@@ -153,6 +165,12 @@ $(document).ready(function() {
         updateAsset(formData, asset.id);
     });
 
+    $('#languageDropdown').change(function() {
+        var selectedLanguage = $(this).val();
+        localStorage.setItem('language', selectedLanguage);
+        location.reload();
+    });
+
     setHeader();
 });
 
@@ -181,8 +199,17 @@ function fetchAssets() {
         type: 'GET',
         dataType: 'json', // Expecting JSON response
         success: function(data) {
-            renderAssets(data);
             assets = data;
+            for(var cnt=0; cnt<assets.length; cnt++)
+            {
+                if(assets[cnt]['Title_translations'])
+                {
+                    assets[cnt]['Title_translations'] = JSON.parse(assets[cnt]['Title_translations']);
+                    assets[cnt]['Description_translations'] = JSON.parse(assets[cnt]['Description_translations']);
+                }
+            }
+            renderAssets(assets, language);
+            
         },
         error: function(jqXHR, textStatus, errorThrown) {
             console.error('Error fetching assets:', textStatus, errorThrown);
@@ -192,19 +219,28 @@ function fetchAssets() {
 }
 
 // Function to render assets on the site
-function renderAssets(assets) {
+function renderAssets(assets, language='en') {
     var $assetsContainer = $('#assetsContainer');
     $assetsContainer.empty(); // Clear existing assets if any
 
     $.each(assets, function(i, asset) {
+        var title;
+        if(language == 'en')
+        {
+            title = asset.Title;
+        }
+        else
+        {
+            title = asset.Title_translations.find(a => a.to == language).text;
+        }
         var $assetDiv = $('<div>').attr({'id': asset.id, 'class': 'asset'});
         var $thumbnail;
         $thumbnail = $('<img>').attr({
             'src': asset.FilePath,
-            'alt': asset.Title
+            'alt': title
         });
 
-        var $title = $('<p>').text(asset.Title);
+        var $title = $('<p>').text(title);
         if(isAdmin()){
             var $iconsDiv = $('<div>').attr({'class': 'icons'});
             $iconsDiv.append('<button class="edit-asset"><i class="fas fa-edit"></i></button>');
@@ -217,21 +253,41 @@ function renderAssets(assets) {
     });
 }
 
-function renderAssetDetail(asset){
+function renderAssetDetail(asset, language='en'){
     var $assetModal = $('#assetModal');
     $assetModal.empty();
     var $assetDiv = $('<div>');
     var $thumbnail;
+    var title;
+    if(language == 'en')
+    {
+        title = asset.Title;
+    }
+    else
+    {
+        title = asset.Title_translations.find(a => a.to == language).text;
+    }
+
     $thumbnail = $('<img>').attr({
         'src': asset.FilePath,
-        'alt': asset.Title
+        'alt': title
     });
 
-    var $title = $('<h2>').text(asset.Title);
+    var description;
+    if(language == 'en')
+    {
+        description = asset.Description;
+    }
+    else
+    {
+        description = asset.Description_translations.find(a => a.to == language).text;
+    }
+
+    var $title = $('<h2>').text(title);
     var obj = new Date(asset.Date);
     const options = { year: 'numeric', month: 'short', day: 'numeric' };
     var $date = $('<h4>').text("Uploaded on: " + obj.toLocaleDateString('en-GB', options).replace(/ /g, '-'));
-    var $desc = $('<p>').text(asset.Description);
+    var $desc = $('<p>').text(description);
     $assetDiv.append($thumbnail, $title, $date, $desc).appendTo($assetModal);
     showModal('Asset');
 }
@@ -309,7 +365,36 @@ function registerUser(){
     });
 }
 
+async function translate(text, type){
+
+    var data = [{"text": text}]
+    var token = localStorage.getItem('TranslatorKey');
+    
+    await $.ajax({
+        url: 'https://api.cognitive.microsofttranslator.com/translate?api-version=3.0&from=en&to=fr&to=hi&to=es&to=ar&to=zh-Hans',
+        type: 'POST',
+        data: JSON.stringify(data),
+        contentType: "application/json",
+        processData: false,
+        beforeSend: function(xhr) {
+            xhr.setRequestHeader("Ocp-Apim-Subscription-Key", token);
+            xhr.setRequestHeader("Ocp-Apim-Subscription-Region", "centralus");
+        },
+        success: function(response) {
+            localStorage.setItem(type, JSON.stringify(response[0].translations))
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+            console.log('Translation failed: ' + textStatus);
+            alert('Translation failed: ' + errorThrown);
+            return "";
+        }
+    });
+}
+
 function uploadAsset(formData){
+
+    formData.append("title_translations", localStorage.getItem('title'));
+    formData.append("description_translations", localStorage.getItem('description'));
 
     $.ajax({
         url: 'https://prod-68.eastus.logic.azure.com/workflows/e6959e5b8e1247a482b4cc2b16134062/triggers/manual/paths/invoke/assetbook/v1/asset/create?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=ebX3TKgwp2w1cYipnmYuycjI5JNQjYLNlx-3jN7LFO0',
@@ -318,7 +403,7 @@ function uploadAsset(formData){
         contentType: false,
         processData: false,
         success: function(response) {
-            location.reload();
+           location.reload();
         },
         error: function(jqXHR, textStatus, errorThrown) {
             console.log('Upload failed: ' + textStatus);
@@ -482,7 +567,8 @@ function fetchAuthKeys() {
         type: 'GET',
         dataType: 'json',
         success: function(data) {
-            localStorage.setItem("AuthKey", data.Key);
+            localStorage.setItem("AuthKey", data.ImageDetectorKey);
+            localStorage.setItem("TranslatorKey", data.TranslatorKey);
         },
         error: function(jqXHR, textStatus, errorThrown) {
             console.error('Error fetching keys:', textStatus, errorThrown);
