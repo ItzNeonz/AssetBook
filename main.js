@@ -90,7 +90,6 @@ $(document).ready(function() {
         showModal('Upload');
     });
 
-
     $('#file').change(function() {
         var fileInput = $(this)[0];
         if (fileInput.files && fileInput.files[0]) {
@@ -162,6 +161,8 @@ $(document).ready(function() {
         formData['FileLocator'] = asset.FileLocator;
         formData['FileName'] = asset.FileName;
         formData['FilePath'] = asset.FilePath;
+        formData['Title_translations'] = JSON.stringify(asset.Title_translations);
+        formData['Description_translations'] = JSON.stringify(asset.Description_translations);
         updateAsset(formData, asset.id);
     });
 
@@ -170,6 +171,10 @@ $(document).ready(function() {
         localStorage.setItem('language', selectedLanguage);
         location.reload();
     });
+
+    $(document).ajaxSend(function() {
+        $("#overlay").fadeIn(300);
+      });
 
     setHeader();
 });
@@ -209,13 +214,17 @@ function fetchAssets() {
                 }
             }
             renderAssets(assets, language);
-            
         },
         error: function(jqXHR, textStatus, errorThrown) {
             console.error('Error fetching assets:', textStatus, errorThrown);
             // Handle error
         }
-    });
+    })
+    .done(function() {
+        setTimeout(function(){
+          $("#overlay").fadeOut(300);
+        },500);
+      });
 }
 
 // Function to render assets on the site
@@ -317,6 +326,11 @@ function login(){
           // If there is an AJAX error
           alert('An error occurred: ' + error);
         }
+    })
+    .done(function() {
+        setTimeout(function(){
+          $("#overlay").fadeOut(300);
+        },500);
     });
 }
 
@@ -362,6 +376,11 @@ function registerUser(){
             console.error('Registration failed:', textStatus, errorThrown);
             alert('Registration failed: ' + errorThrown);
         }
+    })
+    .done(function() {
+        setTimeout(function(){
+          $("#overlay").fadeOut(300);
+        },500);
     });
 }
 
@@ -388,6 +407,11 @@ async function translate(text, type){
             alert('Translation failed: ' + errorThrown);
             return "";
         }
+    })
+    .done(function() {
+        setTimeout(function(){
+          $("#overlay").fadeOut(300);
+        },500);
     });
 }
 
@@ -409,6 +433,11 @@ function uploadAsset(formData){
             console.log('Upload failed: ' + textStatus);
             alert('Upload failed: ' + errorThrown);
         }
+    })
+    .done(function() {
+        setTimeout(function(){
+          $("#overlay").fadeOut(300);
+        },500);
     });
 }
 
@@ -538,6 +567,11 @@ function deleteAsset(id){
           // If there is an AJAX error
           alert('An error occurred: ' + error);
         }
+    })
+    .done(function() {
+        setTimeout(function(){
+          $("#overlay").fadeOut(300);
+        },500);
     });
 }
 
@@ -557,6 +591,11 @@ function updateAsset(formData, assetID){
             console.log('Update failed: ' + textStatus);
             alert('Update failed: ' + errorThrown);
         }
+    })
+    .done(function() {
+        setTimeout(function(){
+          $("#overlay").fadeOut(300);
+        },500);
     });
 }
 
@@ -573,6 +612,11 @@ function fetchAuthKeys() {
         error: function(jqXHR, textStatus, errorThrown) {
             console.error('Error fetching keys:', textStatus, errorThrown);
         }
+    })
+    .done(function() {
+        setTimeout(function(){
+          $("#overlay").fadeOut(300);
+        },500);
     });
 }
 
@@ -606,6 +650,11 @@ function magicFill(){
                 error: function(xhr, status, error) {
                     console.error('File to analyse file', error);
                 }
+            })
+            .done(function() {
+                setTimeout(function(){
+                  $("#overlay").fadeOut(300);
+                },500);
             });
         };
 
