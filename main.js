@@ -121,6 +121,16 @@ $(document).ready(function() {
         {
             await translate(formData.get("title"), "title");
             await translate(formData.get("description"), "description");
+            if(await moderateContent())
+            {
+                console.log("true");
+                formData.set("Sensitive", "true");
+            }
+            else
+            {
+                console.log("false");
+                formData.set("Sensitive", "false");
+            }
             uploadAsset(formData);
         }
         else
@@ -176,6 +186,14 @@ $(document).ready(function() {
         $("#overlay").fadeIn(300);
       });
 
+    $('#sensitiveToggle').change(function() {
+        if (this.checked) {
+            $('.sensitive-content').css('filter', 'none');
+        } else {
+            $('.sensitive-content').css('filter', 'blur(25px)');
+        }
+    });
+
     setHeader();
 });
 
@@ -213,6 +231,7 @@ function fetchAssets() {
                     assets[cnt]['Description_translations'] = JSON.parse(assets[cnt]['Description_translations']);
                 }
             }
+            console.log(assets);
             renderAssets(assets, language);
         },
         error: function(jqXHR, textStatus, errorThrown) {
@@ -244,10 +263,14 @@ function renderAssets(assets, language='en') {
         }
         var $assetDiv = $('<div>').attr({'id': asset.id, 'class': 'asset'});
         var $thumbnail;
-        $thumbnail = $('<img>').attr({
-            'src': asset.FilePath,
-            'alt': title
-        });
+    
+        if(asset['Sensitive'] != undefined && asset['Sensitive'] == "true")
+        {
+            $thumbnail = $('<img>').attr({'src': asset.FilePath, 'alt': title, 'class': 'sensitive-content'});
+        }
+        else{
+            $thumbnail = $('<img>').attr({'src': asset.FilePath, 'alt': title});
+        }
 
         var $title = $('<p>').text(title);
         if(isAdmin()){
@@ -257,9 +280,10 @@ function renderAssets(assets, language='en') {
             $assetDiv.append($iconsDiv);
         }
         $assetDiv.append($thumbnail, $title);
-
         $assetDiv.appendTo($assetsContainer);
     });
+
+    $('.sensitive-content').css('filter', 'blur(25px)');
 }
 
 function renderAssetDetail(asset, language='en'){
@@ -415,7 +439,7 @@ async function translate(text, type){
     });
 }
 
-function uploadAsset(formData){
+async function uploadAsset(formData){
 
     formData.append("title_translations", localStorage.getItem('title'));
     formData.append("description_translations", localStorage.getItem('description'));
@@ -427,7 +451,7 @@ function uploadAsset(formData){
         contentType: false,
         processData: false,
         success: function(response) {
-           location.reload();
+         location.reload();
         },
         error: function(jqXHR, textStatus, errorThrown) {
             console.log('Upload failed: ' + textStatus);
@@ -608,6 +632,7 @@ function fetchAuthKeys() {
         success: function(data) {
             localStorage.setItem("AuthKey", data.ImageDetectorKey);
             localStorage.setItem("TranslatorKey", data.TranslatorKey);
+            localStorage.setItem("ImageModeratorKey", data.ImageModeratorKey);
         },
         error: function(jqXHR, textStatus, errorThrown) {
             console.error('Error fetching keys:', textStatus, errorThrown);
@@ -667,4 +692,60 @@ function magicFill(){
         alert('Please select a file for magic fill!');
     }
 
+}
+
+async function moderateContent() {
+    var file = document.getElementById('file').files[0];
+    var authToken = localStorage.getItem('ImageModeratorKey');
+    var content_type = "";
+
+    if (file.name.includes(".png")) {
+        content_type = "image/png";
+    } else if (file.name.includes(".jpg") || file.name.includes(".jpeg")) {
+        content_type = "image/jpeg";
+    }
+
+    if (file) {
+        return new Promise((resolve, reject) => {
+            var reader = new FileReader();
+
+            reader.onload = function(event) {
+                $.ajax({
+                    url: 'https://coursework2contentmoderation.cognitiveservices.azure.com/contentmoderator/moderate/v1.0/ProcessImage/Evaluate',
+                    type: 'POST',
+                    contentType: content_type,
+                    processData: false,
+                    data: event.target.result,
+                    beforeSend: function(xhr) {
+                        xhr.setRequestHeader("Ocp-Apim-Subscription-Key", authToken);
+                    },
+                    success: function(response) {
+                        console.log(response);
+                        resolve(response.Result);
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Failed to analyse file', error);
+                        reject(error);
+                    }
+                });
+            };
+
+            reader.onerror = function(error) {
+                console.log('Error reading file:', error);
+                reject(error);
+            };
+
+            reader.readAsArrayBuffer(file);
+        });
+    }
+}
+
+async function handleModeration() {
+    try {
+        var result = await moderateContent();
+        console.log('Moderation result:', result);
+        return result;
+    } catch (error) {
+        console.error('Error in moderation:', error);
+    }
 }
