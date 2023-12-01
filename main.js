@@ -123,12 +123,10 @@ $(document).ready(function() {
             await translate(formData.get("description"), "description");
             if(await moderateContent())
             {
-                console.log("true");
                 formData.set("Sensitive", "true");
             }
             else
             {
-                console.log("false");
                 formData.set("Sensitive", "false");
             }
             uploadAsset(formData);
@@ -173,6 +171,7 @@ $(document).ready(function() {
         formData['FilePath'] = asset.FilePath;
         formData['Title_translations'] = JSON.stringify(asset.Title_translations);
         formData['Description_translations'] = JSON.stringify(asset.Description_translations);
+        formData['Sensitive'] = asset.Sensitive;
         updateAsset(formData, asset.id);
     });
 
@@ -187,11 +186,7 @@ $(document).ready(function() {
       });
 
     $('#sensitiveToggle').change(function() {
-        if (this.checked) {
-            $('.sensitive-content').css('filter', 'none');
-        } else {
-            $('.sensitive-content').css('filter', 'blur(25px)');
-        }
+        manageImageSensitivity();
     });
 
     setHeader();
@@ -283,7 +278,7 @@ function renderAssets(assets, language='en') {
         $assetDiv.appendTo($assetsContainer);
     });
 
-    $('.sensitive-content').css('filter', 'blur(25px)');
+    manageImageSensitivity();
 }
 
 function renderAssetDetail(asset, language='en'){
@@ -301,10 +296,14 @@ function renderAssetDetail(asset, language='en'){
         title = asset.Title_translations.find(a => a.to == language).text;
     }
 
-    $thumbnail = $('<img>').attr({
-        'src': asset.FilePath,
-        'alt': title
-    });
+    var $thumbnail;
+    if(asset['Sensitive'] != undefined && asset['Sensitive'] == "true")
+    {
+        $thumbnail = $('<img>').attr({'src': asset.FilePath, 'alt': title, 'class': 'sensitive-content'});
+    }
+    else{
+        $thumbnail = $('<img>').attr({'src': asset.FilePath, 'alt': title});
+    }
 
     var description;
     if(language == 'en')
@@ -322,6 +321,7 @@ function renderAssetDetail(asset, language='en'){
     var $date = $('<h4>').text("Uploaded on: " + obj.toLocaleDateString('en-GB', options).replace(/ /g, '-'));
     var $desc = $('<p>').text(description);
     $assetDiv.append($thumbnail, $title, $date, $desc).appendTo($assetModal);
+    manageImageSensitivity();
     showModal('Asset');
 }
 
@@ -468,6 +468,7 @@ async function uploadAsset(formData){
 function showModal(type){
     switch(type){
         case "Asset":
+            $('.icons').css('z-index', '0');
             $('.asset-modal-backdrop').addClass('show');
             $('#assetModal').addClass('show');
             hideModal("Login");
@@ -486,6 +487,7 @@ function showModal(type){
             $('#assetUploadModal').addClass('show');
             hideModal('Asset');
             hideModal('Login');
+            manageImageSensitivity(true);
             break;
 
         case "Edit":
@@ -502,6 +504,7 @@ function showModal(type){
 function hideModal(type){
     switch(type){
         case "Asset":
+            $('.icons').css('z-index', '20');
             $('.asset-modal-backdrop').removeClass('show');
             $('#assetModal').removeClass('show');
             break;
@@ -514,6 +517,7 @@ function hideModal(type){
         case "Upload":
             $('.upload-modal-backdrop').removeClass('show');
             $('#assetUploadModal').removeClass('show');
+            manageImageSensitivity();
             break;
 
         case "Edit":
@@ -747,5 +751,24 @@ async function handleModeration() {
         return result;
     } catch (error) {
         console.error('Error in moderation:', error);
+    }
+}
+
+function manageImageSensitivity(modalVisible=false){
+
+    if($('#sensitiveToggle').prop('checked'))
+    {
+        $('.sensitive-content').css('filter', 'none');
+    }
+    else
+    {
+        if(modalVisible)
+        {
+            $('.sensitive-content').css('filter', 'blur(50px)');
+        }
+        else
+        {
+            $('.sensitive-content').css('filter', 'blur(25px)');
+        }
     }
 }
