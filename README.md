@@ -1,2 +1,2 @@
-# AssetBook
-This project is developed for coursework 2
+# SnapJournal 
+coursework 2
